@@ -38,6 +38,7 @@ function initialPrompt() {
       "add a role",
       "add a department",
       "update role for an employee",
+      "update employee's manager",
       "delete an employee",
       "delete a role",
       "delete a department",
@@ -69,6 +70,9 @@ function initialPrompt() {
           break;
         case "update role for an employee":
           updateRole();
+          break;
+        case "update employee's manager":
+          updateEmployeeManager();
           break;
         case "delete an employee":
           deleteEmployee();
@@ -260,7 +264,7 @@ const addDepartment = () => {
 
 const updateRole = () => {
   //get all the employee list 
-  connection.query("SELECT * FROM EMPLOYEE", (err, emplRes) => {
+  connection.query("SELECT * FROM EMPLOYEE ORDER BY last_name", (err, emplRes) => {
     if (err) throw err;
     const employeeArr = [];
     emplRes.forEach(({ first_name, last_name, id }) => {
@@ -283,7 +287,7 @@ const updateRole = () => {
 
       let questions = [
         {
-          type: "rawlist",
+          type: "list",
           name: "id",
           choices: employeeArr,
           message: "Which employee would you like to update?"
@@ -315,6 +319,64 @@ const updateRole = () => {
         });
     })
   });
+};
+
+const updateEmployeeManager = () => {
+  //get all the employee list 
+  connection.query("SELECT * FROM EMPLOYEE ORDER BY last_name", (err, emplRes) => {
+    if (err) throw err;
+    const employeeArr = [];
+    emplRes.forEach(({ first_name, last_name, id }) => {
+      employeeArr.push({
+        name: first_name + " " + last_name,
+        value: id
+      });
+    });
+
+    const managerChoice = [{
+      name: 'None',
+      value: 0
+    }]; //an employee could have no manager
+    emplRes.forEach(({ first_name, last_name, id }) => {
+      managerChoice.push({
+        name: first_name + " " + last_name,
+        value: id
+      });
+    });
+
+    let questions = [
+      {
+        type: "list",
+        name: "id",
+        choices: employeeArr,
+        message: "Please select an employee to update."
+      },
+      {
+        type: "list",
+        name: "manager_id",
+        choices: managerChoice,
+        message: "Please select employee's updated manager."
+      }
+    ]
+
+    inquier.prompt(questions)
+      .then(response => {
+        const query = `UPDATE EMPLOYEE SET ? WHERE id = ?;`;
+        let manager_id = response.manager_id !== 0 ? response.manager_id : null;
+        connection.query(query, [
+          { manager_id: manager_id },
+          response.id
+        ], (err, res) => {
+          if (err) throw err;
+          console.log("Employee's manager successfully updated!");
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  })
+
 };
 
 const deleteEmployee = () => {
