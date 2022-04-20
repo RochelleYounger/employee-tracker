@@ -41,6 +41,7 @@ function initialPrompt() {
       "delete an employee",
       "delete a role",
       "delete a department",
+      "View the total utilized budget of a department",
       "quit"
     ]
   }]
@@ -77,6 +78,9 @@ function initialPrompt() {
           break;
         case "delete a department":
           deleteDepartment();
+          break;
+        case "View the total utilized budget of a department":
+          viewDepartmentBudget();
           break;
         default:
           connection.end();
@@ -420,6 +424,48 @@ const deleteDepartment = () => {
             throw err;
           };
           console.log(`Department successfully deleted!`);
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  });
+};
+
+const viewDepartmentBudget = () => {
+  connection.query("SELECT * FROM DEPARTMENT", (err, res) => {
+    if (err) throw err;
+
+    const depArr = [];
+    res.forEach(({ name, id }) => {
+      depArr.push({
+        name: name,
+        value: id
+      });
+    });
+
+    let questions = [
+      {
+        type: "rawlist",
+        name: "id",
+        choices: depArr,
+        message: "Please select a department to view it's total utilization budget."
+      }
+    ];
+
+    inquier.prompt(questions)
+      .then(response => {
+        const query = `SELECT D.name, SUM(salary) AS budget FROM
+      EMPLOYEE AS E LEFT JOIN ROLE AS R
+      ON E.role_id = R.id
+      LEFT JOIN DEPARTMENT AS D
+      ON R.department_id = D.id
+      WHERE D.id = ?
+      `;
+        connection.query(query, [response.id], (err, res) => {
+          if (err) throw err;
+          console.table(res);
           initialPrompt();
         });
       })
