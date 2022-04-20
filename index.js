@@ -32,6 +32,8 @@ function initialPrompt() {
     name: "action",
     message: "What would you like to do?",
     choices: ["View all employees",
+      "view employees by manager",
+      "view employees by department",
       "View all roles",
       "View all departments",
       "add an employee",
@@ -52,6 +54,12 @@ function initialPrompt() {
       switch (response.action) {
         case "View all employees":
           displayAll("EMPLOYEE");
+          break;
+        case "view employees by manager":
+          viewByManager();
+          break;
+        case "view employees by department":
+          viewByDepartment();
           break;
         case "View all roles":
           displayAll("ROLE");
@@ -536,3 +544,105 @@ const viewDepartmentBudget = () => {
       });
   });
 };
+
+const viewByManager = () => {
+  //get all the employee list  ORDER BY last_name
+  connection.query("SELECT * FROM EMPLOYEE ORDER BY last_name", (err, emplRes) => {
+    if (err) throw err;
+    const managerChoice = [{
+      name: 'None',
+      value: 0
+    }];
+
+    emplRes.forEach(({ first_name, last_name, id }) => {
+      managerChoice.push({
+        name: first_name + " " + last_name,
+        value: id
+      });
+    });
+
+    let questions = [
+      {
+        type: "list",
+        name: "manager_id",
+        choices: managerChoice,
+        message: "Which manager would you like to select?"
+      },
+    ]
+
+    inquier.prompt(questions)
+      .then(response => {
+        let manager_id, query;
+        if (response.manager_id) {
+          query = `SELECT E.id AS id, E.first_name AS first_name, E.last_name AS last_name, 
+          R.title AS role, D.name AS department, CONCAT(M.first_name, " ", M.last_name) AS manager
+          FROM EMPLOYEE AS E LEFT JOIN ROLE AS R ON E.role_id = R.id
+          LEFT JOIN DEPARTMENT AS D ON R.department_id = D.id
+          LEFT JOIN EMPLOYEE AS M ON E.manager_id = M.id
+          WHERE E.manager_id = ?;`;
+        } else {
+          manager_id = null;
+          query = `SELECT E.id AS id, E.first_name AS first_name, E.last_name AS last_name, 
+          R.title AS role, D.name AS department, CONCAT(M.first_name, " ", M.last_name) AS manager
+          FROM EMPLOYEE AS E LEFT JOIN ROLE AS R ON E.role_id = R.id
+          LEFT JOIN DEPARTMENT AS D ON R.department_id = D.id
+          LEFT JOIN EMPLOYEE AS M ON E.manager_id = M.id
+          WHERE E.manager_id is null;`;
+        }
+        connection.query(query, [response.manager_id], (err, res) => {
+          if (err) throw err;
+          console.table(res);
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  });
+}
+
+const viewByDepartment = () => {
+  //get all the employee list 
+  connection.query("SELECT * FROM DEPARTMENT", (err, emplRes) => {
+    if (err) throw err;
+    const departmentChoice = [];
+    emplRes.forEach(({ name, id }) => {
+      departmentChoice.push({
+        name: name,
+        value: id
+      });
+    });
+
+    let questions = [
+      {
+        type: "rawlist",
+        name: "department_id",
+        choices: departmentChoice,
+        message: "Which department would you like to select?"
+      },
+    ]
+
+    inquier.prompt(questions)
+      .then(response => {
+        let query;
+        if (response.department_id) {
+          query = `SELECT E.id AS id, E.first_name AS first_name, E.last_name AS last_name, 
+          R.title AS role, D.name AS department, CONCAT(M.first_name, " ", M.last_name) AS manager
+          FROM EMPLOYEE AS E LEFT JOIN ROLE AS R ON E.role_id = R.id
+          LEFT JOIN DEPARTMENT AS D ON R.department_id = D.id
+          LEFT JOIN EMPLOYEE AS M ON E.manager_id = M.id
+          WHERE R.department_id = ?;`;
+        }
+        connection.query(query, [response.department_id], (err, res) => {
+          if (err) throw err;
+          else {
+            console.table(res);
+          }
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  });
+}
