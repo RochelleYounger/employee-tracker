@@ -28,16 +28,16 @@ connection.connect((err) => {
 
 function initialPrompt() {
   const startQuestion = [{
-    type: "list",
+    type: "rawlist",
     name: "action",
     message: "What would you like to do?",
-    loop: false,
     choices: ["View all employees",
       "View all roles",
       "View all departments",
       "add an employee",
       "add a role",
       "add a department",
+      "update role for an employee",
       "quit"
     ]
   }]
@@ -62,6 +62,9 @@ function initialPrompt() {
           break;
         case "add a department":
           addDepartment();
+          break;
+        case "update role for an employee":
+          updateRole();
           break;
         default:
           connection.end();
@@ -137,16 +140,16 @@ const addEmployee = () => {
           message: "Please enter employee's last name."
         },
         {
-          type: "list",
+          type: "rawlist",
           name: "role_id",
           choices: roleArr,
-          message: "Please enter employee's role."
+          message: "Please select employee's role."
         },
         {
-          type: "list",
+          type: "rawlist",
           name: "manager_id",
           choices: employeeArr,
-          message: "Please enter employee's manager."
+          message: "Please select employee's manager."
         }
       ]
 
@@ -165,7 +168,7 @@ const addEmployee = () => {
         });
     })
   });
-}
+};
 
 const addRole = () => {
   //get the list of all department with department_id to make the choices object list for prompt question
@@ -194,10 +197,10 @@ const addRole = () => {
         message: "Please enter role salary."
       },
       {
-        type: "list",
+        type: "rawlist",
         name: "department",
         choices: departments,
-        message: "Please enter role departmet."
+        message: "Please select role departmet."
       }
     ];
 
@@ -237,4 +240,63 @@ const addDepartment = () => {
     .catch(err => {
       console.error(err);
     });
+};
+
+const updateRole = () => {
+  //get all the employee list 
+  connection.query("SELECT * FROM EMPLOYEE", (err, emplRes) => {
+    if (err) throw err;
+    const employeeArr = [];
+    emplRes.forEach(({ first_name, last_name, id }) => {
+      employeeArr.push({
+        name: first_name + " " + last_name,
+        value: id
+      });
+    });
+
+    //get all the role list to make choice of employee's role
+    connection.query("SELECT * FROM ROLE", (err, rolRes) => {
+      if (err) throw err;
+      const roleArr = [];
+      rolRes.forEach(({ title, id }) => {
+        roleArr.push({
+          name: title,
+          value: id
+        });
+      });
+
+      let questions = [
+        {
+          type: "rawlist",
+          name: "id",
+          choices: employeeArr,
+          message: "Which employee would you like to update?"
+        },
+        {
+          type: "rawlist",
+          name: "role_id",
+          choices: roleArr,
+          message: "Please select employee's new role."
+        }
+      ]
+
+      inquier.prompt(questions)
+        .then(response => {
+          const query = `UPDATE EMPLOYEE SET ? WHERE ?? = ?;`;
+          connection.query(query, [
+            { role_id: response.role_id },
+            "id",
+            response.id
+          ], (err, res) => {
+            if (err) throw err;
+
+            console.log("Employee's role successfully updated!");
+            initialPrompt();
+          });
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    })
+  });
 };
