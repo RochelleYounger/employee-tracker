@@ -38,6 +38,7 @@ function initialPrompt() {
       "add a role",
       "add a department",
       "update role for an employee",
+      "delete an employee",
       "quit"
     ]
   }]
@@ -65,6 +66,9 @@ function initialPrompt() {
           break;
         case "update role for an employee":
           updateRole();
+          break;
+        case "delete an employee":
+          deleteEmployee();
           break;
         default:
           connection.end();
@@ -159,7 +163,7 @@ const addEmployee = () => {
           let manager_id = response.manager_id !== 0 ? response.manager_id : null;
           connection.query(query, [[response.first_name, response.last_name, response.role_id, manager_id]], (err, res) => {
             if (err) throw err;
-            console.log(`employee successfully added! ${response.first_name} ${response.last_name} with id ${res.insertId}`);
+            console.log(`${response.first_name} ${response.last_name} successfully added at id ${res.insertId}!`);
             initialPrompt();
           });
         })
@@ -298,5 +302,41 @@ const updateRole = () => {
           console.error(err);
         });
     })
+  });
+};
+
+const deleteEmployee = () => {
+  connection.query("SELECT * FROM EMPLOYEE ORDER BY last_name", (err, res) => {
+    if (err) throw err;
+
+    const employeeArr = [];
+    res.forEach(({ first_name, last_name, id }) => {
+      employeeArr.push({
+        name: first_name + " " + last_name,
+        value: id
+      });
+    });
+
+    let questions = [
+      {
+        type: "list",
+        name: "id",
+        choices: employeeArr,
+        message: "Please select an employee to delete."
+      }
+    ];
+
+    inquier.prompt(questions)
+      .then(response => {
+        const query = `DELETE FROM EMPLOYEE WHERE id = ?`;
+        connection.query(query, [response.id], (err, res) => {
+          if (err) throw err;
+          console.log(`Employee successfully deleted!`);
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
   });
 };
