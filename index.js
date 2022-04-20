@@ -36,6 +36,8 @@ function initialPrompt() {
       "View all roles",
       "View all departments",
       "add an employee",
+      "add a role",
+      "add a department",
       "quit"
     ]
   }]
@@ -54,6 +56,12 @@ function initialPrompt() {
           break;
         case "add an employee":
           addEmployee();
+          break;
+        case "add a role":
+          addRole();
+          break;
+        case "add a department":
+          addDepartment();
           break;
         default:
           connection.end();
@@ -158,3 +166,75 @@ const addEmployee = () => {
     })
   });
 }
+
+const addRole = () => {
+  //get the list of all department with department_id to make the choices object list for prompt question
+  const departments = [];
+  connection.query("SELECT * FROM DEPARTMENT", (err, res) => {
+    if (err) throw err;
+
+    res.forEach(dep => {
+      let qObj = {
+        name: dep.name,
+        value: dep.id
+      }
+      departments.push(qObj);
+    });
+
+    //question list to get arguments for making new roles
+    let questions = [
+      {
+        type: "input",
+        name: "title",
+        message: "Please enter role title."
+      },
+      {
+        type: "input",
+        name: "salary",
+        message: "Please enter role salary."
+      },
+      {
+        type: "list",
+        name: "department",
+        choices: departments,
+        message: "Please enter role departmet."
+      }
+    ];
+
+    inquier.prompt(questions)
+      .then(response => {
+        const query = `INSERT INTO ROLE (title, salary, department_id) VALUES (?)`;
+        connection.query(query, [[response.title, response.salary, response.department]], (err, res) => {
+          if (err) throw err;
+          console.log(`${response.title} successfully added at id ${res.insertId}!`);
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  });
+};
+
+const addDepartment = () => {
+  let questions = [
+    {
+      type: "input",
+      name: "name",
+      message: "Please enter department name."
+    }
+  ];
+
+  inquier.prompt(questions)
+    .then(response => {
+      const query = `INSERT INTO department (name) VALUES (?)`;
+      connection.query(query, [response.name], (err, res) => {
+        if (err) throw err;
+        console.log(`${response.name} successfully added at id ${res.insertId}!`);
+        initialPrompt();
+      });
+    })
+    .catch(err => {
+      console.error(err);
+    });
+};
