@@ -30,9 +30,13 @@ function initialPrompt() {
   const startQuestion = [{
     type: "list",
     name: "action",
-    message: "what would you like to do?",
+    message: "What would you like to do?",
     loop: false,
-    choices: ["View all employees", "quit"]
+    choices: ["View all employees",
+      "View all roles",
+      "View all departments",
+      "quit"
+    ]
   }]
 
   inquier.prompt(startQuestion)
@@ -40,6 +44,12 @@ function initialPrompt() {
       switch (response.action) {
         case "View all employees":
           displayAll("EMPLOYEE");
+          break;
+        case "View all roles":
+          displayAll("ROLE");
+          break;
+        case "View all departments":
+          displayAll("DEPARTMENT");
           break;
         default:
           connection.end();
