@@ -39,6 +39,8 @@ function initialPrompt() {
       "add a department",
       "update role for an employee",
       "delete an employee",
+      "delete a role",
+      "delete a department",
       "quit"
     ]
   }]
@@ -69,6 +71,12 @@ function initialPrompt() {
           break;
         case "delete an employee":
           deleteEmployee();
+          break;
+        case "delete a role":
+          deleteRole();
+          break;
+        case "delete a department":
+          deleteDepartment();
           break;
         default:
           connection.end();
@@ -332,6 +340,86 @@ const deleteEmployee = () => {
         connection.query(query, [response.id], (err, res) => {
           if (err) throw err;
           console.log(`Employee successfully deleted!`);
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  });
+};
+
+const deleteRole = () => {
+  const departments = [];
+  connection.query("SELECT * FROM ROLE", (err, res) => {
+    if (err) throw err;
+
+    const roleArr = [];
+    res.forEach(({ title, id }) => {
+      roleArr.push({
+        name: title,
+        value: id
+      });
+    });
+
+    let questions = [
+      {
+        type: "list",
+        name: "id",
+        choices: roleArr,
+        message: "Please select a role to delete."
+      }
+    ];
+
+    inquier.prompt(questions)
+      .then(response => {
+        const query = `DELETE FROM ROLE WHERE id = ?`;
+        connection.query(query, [response.id], (err, res) => {
+          if (err) {
+            console.log("Cannot delete a role that employees currently hold.");
+            throw err;
+          };
+          console.log(`Role successfully deleted!`);
+          initialPrompt();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  });
+};
+
+const deleteDepartment = () => {
+  const departments = [];
+  connection.query("SELECT * FROM DEPARTMENT", (err, res) => {
+    if (err) throw err;
+
+    res.forEach(dep => {
+      let qObj = {
+        name: dep.name,
+        value: dep.id
+      }
+      departments.push(qObj);
+    });
+
+    let questions = [
+      {
+        type: "list",
+        name: "id",
+        choices: departments,
+        message: "Please select a department to delete."
+      }
+    ];
+
+    inquier.prompt(questions)
+      .then(response => {
+        const query = `DELETE FROM DEPARTMENT WHERE id = ?`;
+        connection.query(query, [response.id], (err, res) => {
+          if (err) {
+            console.log("Cannot delete a department that has employees.");
+            throw err;
+          };
+          console.log(`Department successfully deleted!`);
           initialPrompt();
         });
       })
