@@ -14,6 +14,7 @@ This application runs in the CLI (Command Line Interface) using node. The applic
   * [Usage](#usage)
   * [Contributing](#contributing)
   * [License](#license)
+  * [Credits](#credits)
   * [Questions](#questions)
 
 
@@ -53,7 +54,7 @@ To install the application please follow the proceeding directions:
 
 ## Demo
 
-https://user-images.githubusercontent.com/54952993/155785293-c51dd592-68de-475d-81a6-a150fedd2c96.mp4
+View demo of application [here](https://youtu.be/tq5L5W4UKyA)
 
 ## Contributing
 
