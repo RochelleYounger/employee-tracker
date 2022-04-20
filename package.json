@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/angelinama/employee-tracker.git"
+    "url": "git+https://github.com/RochelleYounger/employee-tracker.git"
   },
   "author": "Rochelle Younger",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/angelinama/employee-tracker/issues"
+    "url": "https://github.com/RochelleYounger/employee-tracker/issues"
   },
-  "homepage": "https://github.com/angelinama/employee-tracker#readme",
+  "homepage": "https://github.com/RochelleYounger/employee-tracker#readme",
   "dependencies": {
     "console.table": "^0.10.0",
     "dotenv": "^8.2.0",
